@@ -14,16 +14,16 @@ export type Input = {
 }
 
 export type Output = {
-    merchantID: string // number,
-    organization: string,
-    website: string,
-    uniqueHits: string // number,
-    Commissions: string // number / $,
-    netSales: string // number / $,
-    numberOfVoids: string // number,
-    numberOfSales: string // number,
-    conversion: string // number / %,
-    epc: string // number / $
+  merchantId: number,
+  organization: string,
+  website: string,
+  uniqueHits: number,
+  commissions: currency
+  netSales: currency
+  numberOfVoids: number,
+  numberOfSales: number,
+  conversion: number
+  epc: currency
 }
 
 export const createAction = (input: Input): types.ActionQuery & types.InputSafe<Input> => {

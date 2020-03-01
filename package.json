@@ -17,6 +17,7 @@
     "@types/camelcase": "^5.2.0",
     "axios": "^0.19.2",
     "camelcase": "^5.3.1",
-    "csv": "^5.3.1"
+    "csv": "^5.3.1",
+    "currency.js": "^1.2.2"
   }
 }

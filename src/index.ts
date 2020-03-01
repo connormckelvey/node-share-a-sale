@@ -2,7 +2,9 @@ import * as crypto from 'crypto'
 import axios from 'axios'
 import * as camelCase from 'camelcase'
 import * as csv from 'csv'
+import * as parse from 'csv-parse'
 import * as actions from './actions'
+import * as currency from 'currency.js'
 
 export interface Config {
   affiliateId: number
@@ -53,9 +55,10 @@ export class ShareASale {
     }
   }
 
-  private async parseResponse<T>(data: string): Promise<Array<T>> {
+  private async parseResponse<T>(data: string, castFunc?: parse.CastingFunction): Promise<Array<T>> {
     return new Promise((resolve, reject) => {
       csv.parse(data, { 
+        cast: castFunc,
         columns: (header: string[]) => header.map(col => camelCase(col))
       }, (err, d) => {
         if (err) {
@@ -66,7 +69,7 @@ export class ShareASale {
     })
   }
 
-  private async doRequest<I extends actions.ActionQuery, O extends {}>(args: I): Promise<O[]> {
+  private async doRequest<I extends actions.ActionQuery, O extends {}>(args: I, castFunc?: parse.CastingFunction): Promise<O[]> {
     const params: Params<I> = {
       ...this.getBaseQuery(),
       ...args,
@@ -75,12 +78,41 @@ export class ShareASale {
       headers: this.getAuth(params.action, new Date().toUTCString()),
       params
     })
-    return this.parseResponse<O>(res.data)
+    return this.parseResponse<O>(res.data, castFunc)
   }
 
   async getTraffic(options: actions.TrafficInput) {
     const action = actions.createTrafficAction(options)
-    return this.doRequest<typeof action, actions.TrafficOutput>(action)
+    return this.doRequest<typeof action, actions.TrafficOutput>(action, (value, context) => {
+      if (context.header) {
+        return value
+      }
+
+      switch(context.column) {
+        case 'merchantId':
+          return parseInt(value, 10)
+        case 'organization':
+          return value
+        case 'website':
+          return value
+        case 'uniqueHits':
+          return parseInt(value, 10)
+        case 'commissions':
+          return currency(value)
+        case 'netSales':
+          return currency(value)
+        case 'numberOfVoids':
+          return parseInt(value, 10)
+        case 'numberOfSales':
+          return parseInt(value, 10)
+        case 'conversion':
+          return parseFloat(value.replace('%', '')) / 100
+        case 'epc':
+          return currency(value)
+        default:
+          return value
+      }
+    })
   }
 
   async getActivity(dateStart, dateEnd) {
