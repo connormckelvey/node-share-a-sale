@@ -1,8 +1,8 @@
 import * as crypto from 'crypto'
 import axios from 'axios'
+import * as camelCase from 'camelcase'
 import * as csv from 'csv'
 import * as actions from './actions'
-
 
 export interface Config {
   affiliateId: number
@@ -55,7 +55,9 @@ export class ShareASale {
 
   private async parseResponse<T>(data: string): Promise<Array<T>> {
     return new Promise((resolve, reject) => {
-      csv.parse(data, { columns: true }, (err, d) => {
+      csv.parse(data, { 
+        columns: (header: string[]) => header.map(col => camelCase(col))
+      }, (err, d) => {
         if (err) {
           return reject(err)
         }
@@ -114,7 +116,6 @@ export class ShareASale {
       category: 'bus',
       sortCol: 'hitcommission',
       sortDir: 'asc'
-      // activatedSince: '02/01/2020'
     })
   }
 }
